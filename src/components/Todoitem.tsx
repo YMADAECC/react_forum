@@ -1,13 +1,14 @@
 import { useState, useEffect, useRef } from 'react';
 import { db } from '../utilities/firebase';
 import { doc, deleteDoc, updateDoc } from 'firebase/firestore';
+import { Timestamp } from 'firebase/firestore';
 
 type TodoItemType = {
-  todo: { id: string; text: string; timestamp: any };
+  todo: { id: string; text: string; timestamp: Timestamp };
 };
 
-const TodoItem: React.FC<TodoItemType> = (props) => {
-  const { id, text, timestamp } = props.todo;
+const TodoItem: React.FC<TodoItemType> = ({ todo }) => {
+  const { id, text, timestamp } = todo;
 
   const [update, setUpdate] = useState('');
   const [isEdit, setIsEdit] = useState(false);
@@ -16,9 +17,8 @@ const TodoItem: React.FC<TodoItemType> = (props) => {
   useEffect(() => {
     // 選択したアイテムにフォーカスを当てる
     const refInput = updateInput.current;
-    if (isEdit === true) {
-      if (refInput === null) return;
-      refInput?.focus();
+    if (isEdit && refInput) {
+      refInput.focus();
     }
   }, [isEdit]);
 
@@ -26,27 +26,22 @@ const TodoItem: React.FC<TodoItemType> = (props) => {
     e.preventDefault();
     updateItem(id);
   };
+
   const updateItem = async (id: string) => {
-    if (update === '') return;
+    if (!update) return;
     await updateDoc(doc(db, 'todos', id), {
       text: update,
     });
     setIsEdit(false);
   };
+
   const deleteItem = async (id: string) => {
     await deleteDoc(doc(db, 'todos', id));
   };
 
   return (
     <li className="todo-item">
-      {isEdit === false ? (
-        <div onDoubleClick={() => setIsEdit(true)}>
-          <span>{text}</span>
-          <span className="date-text">
-            {new Date(timestamp?.toDate()).toLocaleString()}
-          </span>
-        </div>
-      ) : (
+      {isEdit ? (
         <div>
           <form onSubmit={onSubmitUpdate}>
             <input
@@ -54,12 +49,20 @@ const TodoItem: React.FC<TodoItemType> = (props) => {
               className="update-input"
               placeholder={text}
               ref={updateInput}
+              value={update}
               onChange={(e) => setUpdate(e.target.value)}
             />
-            <button className="updateBtn" onClick={() => updateItem(id)}>
+            <button className="updateBtn" type="submit">
               更新
             </button>
           </form>
+        </div>
+      ) : (
+        <div onDoubleClick={() => setIsEdit(true)}>
+          <span>{text}</span>
+          <span className="date-text">
+            {new Date(timestamp?.toDate()).toLocaleString()}
+          </span>
         </div>
       )}
 

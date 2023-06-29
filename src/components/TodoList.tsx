@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { db } from '../utilities/firebase';
 import { collection, query, onSnapshot, orderBy } from 'firebase/firestore';
-import TodoItem from '../components/TodoList';
+import TodoItem from '../components/Todoitem';
 
 type TodoListType = {
   id: string;
